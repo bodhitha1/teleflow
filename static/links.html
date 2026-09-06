@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TeleFlow - Scraped Links Viewer">
+    <title>Scraped Links | TeleFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="style.css?v=7.1">
+    
+</head>
+<body>
+    <div class="background-decor">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+    </div>
+
+    <div class="app-container">
+        <div class="links-container">
+            <div class="glass-card header-box">
+                <div>
+                    <h1 class="page-title">
+                        <i class="ph-duotone ph-link" ></i>
+                        Scraped Links
+                    </h1>
+                    <p class="subtitle" class="page-subtitle" id="link-count">Loading...</p>
+                </div>
+                <button class="btn secondary-btn" onclick="window.close()">
+                    <i class="ph ph-x"></i> Close Tab
+                </button>
+            </div>
+            
+            <div id="links-list">
+                <!-- Links will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let previousLinkCount = -1;
+
+        async function loadLinks() {
+            try {
+                const res = await fetch('/api/links');
+                const data = await res.json();
+                
+                const container = document.getElementById('links-list');
+                const countDisplay = document.getElementById('link-count');
+                
+                if (!data.links || data.links.length === 0) {
+                    countDisplay.textContent = "0 links found";
+                    container.innerHTML = `
+                        <div class="glass-card empty-state">
+                            <i class="ph-duotone ph-ghost empty-icon"></i>
+                            <h3>No Links Found</h3>
+                            <p>Run the scraper to collect Telegram links from a channel.</p>
+                        </div>
+                    `;
+                    previousLinkCount = 0;
+                    return;
+                }
+                
+                // Only re-render if the count changed so we don't mess up the hover/copy buttons
+                if (data.links.length !== previousLinkCount) {
+                    countDisplay.textContent = `${data.links.length} links found during this session`;
+                    container.innerHTML = '';
+                    
+                    data.links.forEach((url) => {
+                        const el = document.createElement('div');
+                        el.className = 'glass-card link-card';
+                        
+                        el.innerHTML = `
+                            <div class="link-content">
+                                <div class="link-icon"><i class="ph-fill ph-link-simple-horizontal"></i></div>
+                                <a href="${url}" target="_blank" class="link-url">${url}</a>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('${url}', this)">
+                                <i class="ph ph-copy"></i> Copy
+                            </button>
+                        `;
+                        container.appendChild(el);
+                    });
+                    
+                    previousLinkCount = data.links.length;
+                }
+            } catch (err) {
+                console.error("Failed to fetch links:", err);
+            }
+        }
+        
+        function copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="ph ph-check"></i> Copied!';
+                btn.style.background = 'var(--status-active)';
+                btn.style.borderColor = 'var(--status-active)';
+                btn.style.color = 'white';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 2000);
+            });
+        }
+        
+        // Auto-refresh every 3 seconds if active
+        loadLinks();
+        setInterval(loadLinks, 3000);
+    </script>
+</body>
+</html>

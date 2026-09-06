@@ -1,0 +1,9 @@
+{
+  "name": "TeleFlow Dashboard",
+  "short_name": "TeleFlow",
+  "description": "Telegram Media Explorer & Scraper Suite",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#14141c",
+  "theme_color": "#14141c"
+}

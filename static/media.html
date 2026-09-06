@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TeleFlow - High-Performance Media Explorer">
+    <title>Media Explorer | TeleFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="style.css?v=7.1">
+</head>
+<body class="pinterest-page">
+    <div class="pinterest-app-wrapper">
+        
+        <!-- Top Navigation Bar -->
+        <header class="pinterest-nav-header">
+            <div class="pinterest-nav-left">
+                <!-- TeleFlow Brand Badge -->
+                <div class="telegrab-brand-badge" title="TeleFlow Media Explorer" onclick="resetAndReload()">
+                    <div class="telegrab-brand-icon">
+                        <i class="ph-fill ph-paper-plane-tilt"></i>
+                    </div>
+                    <span class="telegrab-brand-title">TELEFLOW</span>
+                </div>
+                
+                <!-- Separate Source Nav Pills (Do Not Mix Daemon and Scraper!) -->
+                <nav class="pinterest-source-tabs" aria-label="Media Source">
+                    <button class="pinterest-nav-pill active" data-source="all" id="tab-source-all">
+                        <span>All Media</span>
+                        <span class="source-count-badge" id="source-count-all">0</span>
+                    </button>
+                    <button class="pinterest-nav-pill" data-source="daemon" id="tab-source-daemon">
+                        <i class="ph-fill ph-broadcast"></i>
+                        <span>Daemon Watcher</span>
+                        <span class="source-count-badge" id="source-count-daemon">0</span>
+                    </button>
+                    <button class="pinterest-nav-pill" data-source="scraper" id="tab-source-scraper">
+                        <i class="ph-fill ph-cloud-arrow-down"></i>
+                        <span>Scraper Archive</span>
+                        <span class="source-count-badge" id="source-count-scraper">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Pinterest Big Rounded Search Bar -->
+            <div class="pinterest-nav-center">
+                <div class="pinterest-search-bar">
+                    <i class="ph ph-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search pins, channels, videos, messages..." autocomplete="off">
+                    <button type="button" id="clear-search-btn" class="clear-search-btn hidden" aria-label="Clear Search">
+                        <i class="ph ph-x-circle"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="pinterest-nav-right">
+                <button class="btn secondary-btn refresh-feed-btn" id="refresh-feed-btn" title="Refresh pins feed">
+                    <i class="ph-bold ph-arrows-clockwise" id="refresh-icon"></i>
+                    <span>Refresh</span>
+                </button>
+                <button class="btn secondary-btn clean-junk-btn" id="clean-junk-btn" title="Clean partial files, cache and junk">
+                    <i class="ph-bold ph-broom"></i>
+                    <span>Clean Junk</span>
+                </button>
+                <button class="btn secondary-btn clear-media-btn" id="clear-media-btn" title="Clear detected media history">
+                    <i class="ph-bold ph-trash"></i>
+                    <span>Clear Media</span>
+                </button>
+                <div class="filter-select-wrap">
+                    <select id="sort-filter" class="pinterest-dropdown">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="largest">Largest Size</option>
+                        <option value="smallest">Smallest Size</option>
+                    </select>
+                </div>
+                <button class="pinterest-icon-btn close-btn" onclick="window.close()" title="Close Tab">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Category Filter Sub-Bar with Live Badges -->
+        <section class="pinterest-category-subbar">
+            <div class="category-subbar-inner">
+                <div class="category-pills-scroll" id="category-tabs">
+                    <button class="pin-cat-pill active" data-category="all">
+                        <span>All Types</span>
+                        <span class="pin-cat-badge" id="count-all">0</span>
+                    </button>
+                    <button class="pin-cat-pill" data-category="video">
+                        <i class="ph-fill ph-video-camera"></i>
+                        <span>Videos</span>
+                        <span class="pin-cat-badge" id="count-video">0</span>
+                    </button>
+                    <button class="pin-cat-pill" data-category="image">
+                        <i class="ph-fill ph-image"></i>
+                        <span>Images</span>
+                        <span class="pin-cat-badge" id="count-image">0</span>
+                    </button>
+                    <button class="pin-cat-pill" data-category="msg">
+                        <i class="ph-fill ph-chat-circle-text"></i>
+                        <span>Messages</span>
+                        <span class="pin-cat-badge" id="count-msg">0</span>
+                    </button>
+                    <button class="pin-cat-pill" data-category="others">
+                        <i class="ph-fill ph-files"></i>
+                        <span>Documents / Files</span>
+                        <span class="pin-cat-badge" id="count-others">0</span>
+                    </button>
+                </div>
+
+                <div class="channel-filter-wrap">
+                    <select id="channel-filter" class="pinterest-dropdown channel-dropdown">
+                        <option value="all">All Channels</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status Headline -->
+        <div class="pinterest-feed-status">
+            <span id="media-status-subtitle">Loading pins...</span>
+        </div>
+
+        <!-- Authentic Pinterest Masonry Board (Natural Staggered Aspect Ratio) -->
+        <main id="media-list" class="pinterest-masonry-board">
+            <!-- Pins dynamically injected here -->
+        </main>
+
+        <!-- Loading State Indicator -->
+        <div id="loading-indicator" class="infinite-loader hidden" style="margin: 2.5rem auto;">
+            <i class="ph-bold ph-spinner ph-spin"></i>
+            <span>Loading pins...</span>
+        </div>
+
+        <!-- Glassmorphism Pagination Controls -->
+        <div id="pagination-toolbar" class="pinterest-pagination-container hidden">
+            <!-- Rendered dynamically by renderPagination() -->
+        </div>
+    </div>
+
+    <!-- Scroll To Top Button -->
+    <button id="scroll-to-top-btn" class="scroll-to-top-btn hidden" title="Scroll to Top" aria-label="Scroll to Top">
+        <i class="ph-bold ph-arrow-up"></i>
+    </button>
+
+    <!-- Sticky Floating Batch Action Bar -->
+    <div id="selection-bar" class="selection-floating-bar hidden">
+        <div class="selection-info">
+            <div class="selection-text">
+                <span class="selected-count-badge" id="selected-count">0</span>
+                <span id="selected-size-text">pins selected (0 MB)</span>
+            </div>
+        </div>
+        <div class="selection-actions">
+            <button type="button" class="btn secondary-btn btn-sm" id="select-visible-btn">
+                <i class="ph ph-check"></i> Select Visible
+            </button>
+            <button type="button" class="btn secondary-btn btn-sm" id="deselect-all-btn">
+                <i class="ph ph-x"></i> Deselect
+            </button>
+            <button type="button" class="btn danger-btn btn-sm" id="delete-selected-btn" title="Delete selected pins from history">
+                <i class="ph-bold ph-trash"></i> Delete Selected
+            </button>
+            <button type="button" class="btn primary-btn btn-sm pulse-hover" id="download-selected-btn">
+                <i class="ph-bold ph-download-simple"></i>
+                <span>Download Selected</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Fullscreen Cinema Media / Text Preview Modal -->
+    <div id="media-preview-modal" class="modal-backdrop hidden">
+        <div class="modal-card glass-panel preview-modal-card">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span id="modal-type-badge" class="type-badge">PREVIEW</span>
+                    <h3 class="modal-title" id="modal-file-name">Media Preview</h3>
+                </div>
+                <button type="button" id="modal-close-btn" class="modal-close-btn" aria-label="Close modal">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <div class="preview-modal-body" id="modal-preview-body">
+                <!-- Preview injected dynamically -->
+            </div>
+            <div class="modal-actions preview-modal-actions">
+                <div class="modal-meta-box">
+                    <span id="modal-channel-name" class="modal-channel-pill"></span>
+                    <span id="modal-meta-info" class="modal-meta-info"></span>
+                </div>
+                <div class="modal-buttons-right">
+                    <button type="button" class="btn secondary-btn btn-sm" id="modal-stream-tab-btn" title="Open stream directly in a new browser tab">
+                        <i class="ph-bold ph-arrow-square-out"></i> Stream Tab
+                    </button>
+                    <button type="button" class="btn secondary-btn btn-sm" id="modal-copy-btn">
+                        <i class="ph ph-copy"></i> Copy Info
+                    </button>
+                    <button type="button" class="btn primary-btn btn-sm pulse-hover" id="modal-download-btn">
+                        <i class="ph-bold ph-download-simple"></i> Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clear Media Confirmation Modal -->
+    <div id="clear-media-modal" class="modal-backdrop hidden">
+        <div class="modal-card glass-panel" style="max-width: 460px; padding: 1.75rem;">
+            <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <div class="modal-title-wrap" style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 1.25rem;">
+                        <i class="ph-bold ph-trash"></i>
+                    </div>
+                    <h3 class="modal-title" style="margin: 0; font-size: 1.2rem; font-weight: 700; color: #f8fafc;">Clear Media History</h3>
+                </div>
+                <button type="button" id="close-clear-modal-btn" class="pinterest-icon-btn" aria-label="Close modal">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.6;">
+                <p style="margin: 0 0 1.25rem 0;">Select what you want to remove from your detected media history:</p>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; background: rgba(255, 255, 255, 0.04); padding: 1.1rem; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; font-size: 0.92rem;">
+                        <input type="radio" name="clear-scope" value="current" checked style="accent-color: #ef4444; width: 18px; height: 18px;">
+                        <span>Clear current view (<strong id="clear-current-scope-label" style="color: #60a5fa;">Current filter</strong>)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; font-size: 0.92rem;">
+                        <input type="radio" name="clear-scope" value="all" style="accent-color: #ef4444; width: 18px; height: 18px;">
+                        <span>Clear all detected pins completely (<span style="color: #ef4444; font-weight: 600;">All Daemon & Scraper pins</span>)</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" class="btn secondary-btn" id="cancel-clear-btn" style="padding: 8px 18px; border-radius: 20px;">Cancel</button>
+                <button type="button" class="btn danger-btn" id="confirm-clear-btn" style="padding: 8px 20px; border-radius: 20px; background: #e60023; border-color: #e60023; color: white; font-weight: 700;">
+                    <i class="ph-bold ph-trash"></i> Clear Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // High-Scale State (25 items per batch, separate sources)
+        let currentSource = 'all'; // 'all' | 'daemon' | 'scraper'
+        let currentCategory = 'all';
+        let currentChannel = 'all';
+        let currentSearch = '';
+        let currentSort = 'newest';
+        let currentPage = 1;
+        let pageLimit = 24; // 24 items per page for clean multi-column grid
+        let currentOffset = 0;
+        let totalMatching = 0;
+        let isLoading = false;
+
+        const allLoadedItems = new Map(); // id -> item data
+        const selectedItemIds = new Set(); // set of selected IDs
+
+        // DOM References
+        const mediaList = document.getElementById('media-list');
+        const countAll = document.getElementById('count-all');
+        const countVideo = document.getElementById('count-video');
+        const countImage = document.getElementById('count-image');
+        const countMsg = document.getElementById('count-msg');
+        const countOthers = document.getElementById('count-others');
+        
+        const sourceCountAll = document.getElementById('source-count-all');
+        const sourceCountDaemon = document.getElementById('source-count-daemon');
+        const sourceCountScraper = document.getElementById('source-count-scraper');
+
+        const statusSubtitle = document.getElementById('media-status-subtitle');
+        const channelFilter = document.getElementById('channel-filter');
+        const sortFilter = document.getElementById('sort-filter');
+        const searchInput = document.getElementById('search-input');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const paginationToolbar = document.getElementById('pagination-toolbar');
+        const selectionBar = document.getElementById('selection-bar');
+        const selectedCountEl = document.getElementById('selected-count');
+        const selectedSizeText = document.getElementById('selected-size-text');
+        const scrollToTopBtn = document.getElementById('scroll-to-top-btn');
+
+        // Scroll To Top Button Logic
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) {
+                scrollToTopBtn.classList.remove('hidden');
+            } else {
+                scrollToTopBtn.classList.add('hidden');
+            }
+        }, { passive: true });
+
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return '';
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Fetch Category Summary & Source Counts
+        async function fetchSummary() {
+            try {
+                const res = await fetch(`/api/media/summary?source=${encodeURIComponent(currentSource)}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                
+                if (data.counts) {
+                    countAll.textContent = (data.counts.all || 0).toLocaleString();
+                    countVideo.textContent = (data.counts.video || 0).toLocaleString();
+                    countImage.textContent = (data.counts.image || 0).toLocaleString();
+                    countMsg.textContent = (data.counts.msg || 0).toLocaleString();
+                    countOthers.textContent = (data.counts.others || 0).toLocaleString();
+                }
+
+                if (data.sources) {
+                    sourceCountAll.textContent = (data.sources.all || 0).toLocaleString();
+                    sourceCountDaemon.textContent = (data.sources.daemon || 0).toLocaleString();
+                    sourceCountScraper.textContent = (data.sources.scraper || 0).toLocaleString();
+                }
+
+                if (data.channels && data.channels.length > 0) {
+                    const currentVal = channelFilter.value;
+                    const existingOptions = new Set(Array.from(channelFilter.options).map(o => o.value));
+                    
+                    data.channels.forEach(ch => {
+                        if (!existingOptions.has(ch)) {
+                            const opt = document.createElement('option');
+                            opt.value = ch;
+                            opt.textContent = ch;
+                            channelFilter.appendChild(opt);
+                        }
+                    });
+                    channelFilter.value = currentVal;
+                }
+            } catch (err) {
+                console.warn('Summary fetch error:', err);
+            }
+        }
+
+        // Reset and Reload Pins (Always starts at Page 1)
+        function resetAndReload() {
+            currentPage = 1;
+            totalMatching = 0;
+            allLoadedItems.clear();
+            mediaList.innerHTML = '';
+            loadPage(1);
+            fetchSummary();
+        }
+
+        // Load specific paginated page
+        async function loadPage(pageNumber = 1) {
+            if (isLoading) return;
+            isLoading = true;
+            currentPage = pageNumber;
+            currentOffset = (currentPage - 1) * pageLimit;
+            if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+
+            const params = new URLSearchParams({
+                category: currentCategory,
+                source: currentSource,
+                channel: currentChannel,
+                search: currentSearch,
+                sort: currentSort,
+                limit: pageLimit,
+                offset: currentOffset
+            });
+
+            try {
+                const res = await fetch(`/api/media?${params.toString()}`);
+                if (!res.ok) throw new Error('Failed to load media');
+                const data = await res.json();
+
+                totalMatching = data.total || 0;
+                const items = data.media || [];
+
+                const sourceLabel = currentSource === 'daemon' ? 'Daemon Watcher' : (currentSource === 'scraper' ? 'Scraper Archive' : 'All Media');
+                statusSubtitle.textContent = `Showing ${totalMatching.toLocaleString()} pins from ${sourceLabel}${currentCategory !== 'all' ? ` • ${currentCategory.toUpperCase()}` : ''}`;
+
+                mediaList.innerHTML = '';
+                allLoadedItems.clear();
+
+                if (items.length === 0) {
+                    if (paginationToolbar) paginationToolbar.classList.add('hidden');
+                    mediaList.innerHTML = `
+                        <div class="pinterest-empty-board">
+                            <div class="empty-icon-wrap">
+                                <i class="ph-duotone ph-push-pin"></i>
+                            </div>
+                            <h3>No pins found</h3>
+                            <p>There are no items matching "${escapeHtml(currentSearch || currentCategory)}" in ${sourceLabel}.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const fragment = document.createDocumentFragment();
+                items.forEach(item => {
+                    allLoadedItems.set(item.id, item);
+                    const card = createPinterestPinCard(item);
+                    fragment.appendChild(card);
+                });
+                mediaList.appendChild(fragment);
+
+                renderPagination(totalMatching);
+            } catch (err) {
+                console.error('Error fetching media page:', err);
+                statusSubtitle.textContent = 'Error loading pins from server.';
+            } finally {
+                isLoading = false;
+                if (loadingIndicator) loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        // Render Glassmorphism Pagination Bar
+        function renderPagination(totalCount) {
+            if (!paginationToolbar) return;
+            const totalPages = Math.max(1, Math.ceil(totalCount / pageLimit));
+            if (totalPages <= 1 && totalCount <= pageLimit) {
+                paginationToolbar.classList.add('hidden');
+                return;
+            }
+            paginationToolbar.classList.remove('hidden');
+
+            const startItem = Math.min((currentPage - 1) * pageLimit + 1, totalCount);
+            const endItem = Math.min(currentPage * pageLimit, totalCount);
+
+            // Calculate pagination window (e.g. 1 ... 4 5 6 ... 100)
+            let pages = [];
+            if (totalPages <= 7) {
+                for (let p = 1; p <= totalPages; p++) pages.push(p);
+            } else {
+                pages.push(1);
+                if (currentPage > 4) pages.push('...');
+                let start = Math.max(2, currentPage - 2);
+                let end = Math.min(totalPages - 1, currentPage + 2);
+                for (let p = start; p <= end; p++) pages.push(p);
+                if (currentPage < totalPages - 3) pages.push('...');
+                pages.push(totalPages);
+            }
+
+            let buttonsHtml = '';
+            // Previous Button
+            buttonsHtml += `
+                <button type="button" class="pagination-btn" id="pg-btn-prev" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page">
+                    <i class="ph-bold ph-caret-left"></i> Prev
+                </button>
+            `;
+
+            pages.forEach(p => {
+                if (p === '...') {
+                    buttonsHtml += `<span class="pagination-ellipsis">...</span>`;
+                } else {
+                    buttonsHtml += `
+                        <button type="button" class="pagination-btn ${p === currentPage ? 'active' : ''}" data-page="${p}">
+                            ${p}
+                        </button>
+                    `;
+                }
+            });
+
+            // Next Button
+            buttonsHtml += `
+                <button type="button" class="pagination-btn" id="pg-btn-next" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page">
+                    Next <i class="ph-bold ph-caret-right"></i>
+                </button>
+            `;
+
+            paginationToolbar.innerHTML = `
+                <div class="pagination-top-row">
+                    <div class="pagination-info-text">
+                        Showing <strong>${startItem.toLocaleString()} - ${endItem.toLocaleString()}</strong> of <strong>${totalCount.toLocaleString()}</strong> pins (Page <strong>${currentPage}</strong> of <strong>${totalPages.toLocaleString()}</strong>)
+                    </div>
+                    <div class="pagination-per-page-wrap">
+                        <span>Pins per page:</span>
+                        <select class="pagination-per-page-select" id="per-page-select">
+                            <option value="24" ${pageLimit === 24 ? 'selected' : ''}>24</option>
+                            <option value="48" ${pageLimit === 48 ? 'selected' : ''}>48</option>
+                            <option value="96" ${pageLimit === 96 ? 'selected' : ''}>96</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pagination-buttons-row">
+                    ${buttonsHtml}
+                    <div class="pagination-jump-wrap" style="margin-left: 0.75rem;">
+                        <span>Go to:</span>
+                        <input type="number" class="pagination-jump-input" id="pg-jump-input" min="1" max="${totalPages}" value="${currentPage}">
+                        <button type="button" class="pagination-jump-btn" id="pg-jump-btn">Go</button>
+                    </div>
+                </div>
+            `;
+
+            // Event Listeners for Pagination Controls
+            const prevBtn = document.getElementById('pg-btn-prev');
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    if (currentPage > 1) goToPage(currentPage - 1);
+                });
+            }
+
+            const nextBtn = document.getElementById('pg-btn-next');
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    if (currentPage < totalPages) goToPage(currentPage + 1);
+                });
+            }
+
+            paginationToolbar.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetPage = parseInt(btn.dataset.page, 10);
+                    if (targetPage && targetPage !== currentPage) {
+                        goToPage(targetPage);
+                    }
+                });
+            });
+
+            const perPageSelect = document.getElementById('per-page-select');
+            if (perPageSelect) {
+                perPageSelect.addEventListener('change', () => {
+                    pageLimit = parseInt(perPageSelect.value, 10) || 24;
+                    goToPage(1);
+                });
+            }
+
+            const jumpBtn = document.getElementById('pg-jump-btn');
+            const jumpInput = document.getElementById('pg-jump-input');
+            const handleJump = () => {
+                const target = parseInt(jumpInput.value, 10);
+                if (target >= 1 && target <= totalPages && target !== currentPage) {
+                    goToPage(target);
+                }
+            };
+            if (jumpBtn) jumpBtn.addEventListener('click', handleJump);
+            if (jumpInput) {
+                jumpInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') handleJump();
+                });
+            }
+        }
+
+        // Change page & scroll to top of content
+        function goToPage(pageNum) {
+            loadPage(pageNum);
+            const scrollTarget = document.querySelector('.pinterest-filter-subbar') || document.body;
+            scrollTarget.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Create Authentic Pinterest Pin Card
+        function createPinterestPinCard(item) {
+            const card = document.createElement('article');
+            card.className = `pinterest-pin-card ${selectedItemIds.has(item.id) ? 'selected' : ''}`;
+            card.id = `media-card-${item.id}`;
+            card.dataset.id = item.id;
+
+            const isSelected = selectedItemIds.has(item.id);
+            const channelName = item.channel_name || 'Channel';
+            const mType = (item.type || 'others').toLowerCase();
+            const source = (item.source || 'daemon').toLowerCase();
+            const dateFormatted = item.date ? new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+            const sizeStr = item.size ? formatBytes(item.size) : '';
+            const durationStr = formatDuration(item.duration);
+
+            // Channel avatar initial
+            const initial = channelName.trim().charAt(0).toUpperCase() || 'C';
+
+            // Top visual media container
+            let mediaCanvasHtml = '';
+            if (mType === 'video') {
+                mediaCanvasHtml = `
+                    <div class="pin-visual-wrapper video-pin">
+                        <img src="/api/thumbnail/${item.id}?chat_id=${item.chat_id || ''}" alt="${escapeHtml(item.file_name)}" loading="lazy" decoding="async" class="pin-img" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                        <div class="pin-fallback-canvas video-canvas" style="display: none;">
+                            <i class="ph-duotone ph-video-camera"></i>
+                            <span>${item.resolution && item.resolution !== 'Unknown' ? item.resolution : 'VIDEO'}</span>
+                        </div>
+                        <div class="pin-hover-overlay">
+                            <div class="pin-top-actions">
+                                <span class="pin-source-badge source-${source}">
+                                    <i class="ph-fill ${source === 'scraper' ? 'ph-cloud-arrow-down' : 'ph-broadcast'}"></i>
+                                    <span>${source === 'scraper' ? 'Scraper' : 'Daemon'}</span>
+                                </span>
+                                <button type="button" class="pin-select-btn ${isSelected ? 'selected' : ''}" title="${isSelected ? 'Deselect Pin' : 'Select Pin'}">
+                                    <i class="ph-bold ${isSelected ? 'ph-check' : 'ph-plus'}"></i>
+                                    <span>${isSelected ? 'Selected' : 'Select'}</span>
+                                </button>
+                            </div>
+                            <div class="pin-center-play-action">
+                                <i class="ph-fill ph-play-circle"></i>
+                            </div>
+                            <div class="pin-bottom-actions">
+                                ${durationStr ? `<span class="pin-video-pill"><i class="ph ph-clock"></i> ${durationStr}</span>` : '<span></span>'}
+                                <button type="button" class="pin-direct-dl-btn" title="Download">
+                                    <i class="ph-bold ph-download-simple"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (mType === 'image') {
+                mediaCanvasHtml = `
+                    <div class="pin-visual-wrapper image-pin">
+                        <img src="/api/thumbnail/${item.id}?chat_id=${item.chat_id || ''}" alt="${escapeHtml(item.file_name)}" loading="lazy" decoding="async" class="pin-img" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                        <div class="pin-fallback-canvas image-canvas" style="display: none;">
+                            <i class="ph-duotone ph-image"></i>
+                            <span>IMAGE</span>
+                        </div>
+                        <div class="pin-hover-overlay">
+                            <div class="pin-top-actions">
+                                <span class="pin-source-badge source-${source}">
+                                    <i class="ph-fill ${source === 'scraper' ? 'ph-cloud-arrow-down' : 'ph-broadcast'}"></i>
+                                    <span>${source === 'scraper' ? 'Scraper' : 'Daemon'}</span>
+                                </span>
+                                <button type="button" class="pin-select-btn ${isSelected ? 'selected' : ''}" title="${isSelected ? 'Deselect Pin' : 'Select Pin'}">
+                                    <i class="ph-bold ${isSelected ? 'ph-check' : 'ph-plus'}"></i>
+                                    <span>${isSelected ? 'Selected' : 'Select'}</span>
+                                </button>
+                            </div>
+                            <div class="pin-bottom-actions">
+                                <span></span>
+                                <button type="button" class="pin-direct-dl-btn" title="Download">
+                                    <i class="ph-bold ph-download-simple"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (mType === 'msg') {
+                mediaCanvasHtml = `
+                    <div class="pin-visual-wrapper msg-pin">
+                        <div class="pin-msg-box">
+                            <i class="ph-duotone ph-quotes pin-quote-icon"></i>
+                            <p class="pin-msg-body">${escapeHtml(item.text || 'Message text')}</p>
+                        </div>
+                        <div class="pin-hover-overlay">
+                            <div class="pin-top-actions">
+                                <span class="pin-source-badge source-${source}">
+                                    <i class="ph-fill ${source === 'scraper' ? 'ph-cloud-arrow-down' : 'ph-broadcast'}"></i>
+                                    <span>${source === 'scraper' ? 'Scraper' : 'Daemon'}</span>
+                                </span>
+                                <button type="button" class="pin-select-btn ${isSelected ? 'selected' : ''}" title="${isSelected ? 'Deselect Pin' : 'Select Pin'}">
+                                    <i class="ph-bold ${isSelected ? 'ph-check' : 'ph-plus'}"></i>
+                                    <span>${isSelected ? 'Selected' : 'Select'}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                const ext = (item.file_name || '').split('.').pop().toUpperCase() || 'FILE';
+                mediaCanvasHtml = `
+                    <div class="pin-visual-wrapper doc-pin">
+                        <div class="pin-doc-box">
+                            <div class="pin-doc-icon-wrap">
+                                <i class="ph-duotone ph-file-arrow-down"></i>
+                            </div>
+                            <span class="pin-doc-ext">${ext}</span>
+                        </div>
+                        <div class="pin-hover-overlay">
+                            <div class="pin-top-actions">
+                                <span class="pin-source-badge source-${source}">
+                                    <i class="ph-fill ${source === 'scraper' ? 'ph-cloud-arrow-down' : 'ph-broadcast'}"></i>
+                                    <span>${source === 'scraper' ? 'Scraper' : 'Daemon'}</span>
+                                </span>
+                                <button type="button" class="pin-select-btn ${isSelected ? 'selected' : ''}" title="${isSelected ? 'Deselect Pin' : 'Select Pin'}">
+                                    <i class="ph-bold ${isSelected ? 'ph-check' : 'ph-plus'}"></i>
+                                    <span>${isSelected ? 'Selected' : 'Select'}</span>
+                                </button>
+                            </div>
+                            <div class="pin-bottom-actions">
+                                <span></span>
+                                <button type="button" class="pin-direct-dl-btn" title="Download">
+                                    <i class="ph-bold ph-download-simple"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Pin Card Layout: Visual canvas on top, Clean title & Channel Author row on bottom
+            card.innerHTML = `
+                ${mediaCanvasHtml}
+                <div class="pin-info-area">
+                    <h4 class="pin-title" title="${escapeHtml(item.file_name || item.text || 'Pin')}">${escapeHtml(item.file_name || (item.text ? item.text.substring(0, 45) + '...' : `Item ${item.id}`))}</h4>
+                    <div class="pin-author-row" title="Channel: ${escapeHtml(channelName)}">
+                        <div class="pin-avatar">${initial}</div>
+                        <span class="pin-author-name">${escapeHtml(channelName)}</span>
+                    </div>
+                    <div class="pin-extra-meta">
+                        <span class="pin-tag tag-${mType}">${mType.toUpperCase()}</span>
+                        ${sizeStr ? `<span>${sizeStr}</span>` : ''}
+                        ${dateFormatted ? `<span>• ${dateFormatted}</span>` : ''}
+                    </div>
+                </div>
+            `;
+
+            // Pin Action Handlers
+            const saveBtn = card.querySelector('.pin-select-btn, .pin-save-btn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleSelection(item.id);
+                });
+            }
+
+            const dlBtn = card.querySelector('.pin-direct-dl-btn');
+            if (dlBtn) {
+                dlBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.open(`/api/stream/${item.id}?download=true&chat_id=${item.chat_id || ''}`, '_blank');
+                });
+            }
+
+            // Clicking pin body -> Opens Cinema Preview Modal
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.pin-select-btn') || e.target.closest('.pin-save-btn') || e.target.closest('.pin-direct-dl-btn')) return;
+                openPreviewModal(item);
+            });
+
+            return card;
+        }
+
+        // Selection Management
+        function toggleSelection(id) {
+            if (selectedItemIds.has(id)) {
+                selectedItemIds.delete(id);
+            } else {
+                selectedItemIds.add(id);
+            }
+            updateCardSelectionState(id);
+            updateSelectionBar();
+        }
+
+        function updateCardSelectionState(id) {
+            const card = document.getElementById(`media-card-${id}`);
+            if (!card) return;
+            const isSelected = selectedItemIds.has(id);
+            card.classList.toggle('selected', isSelected);
+            const saveBtn = card.querySelector('.pin-select-btn, .pin-save-btn');
+            if (saveBtn) {
+                saveBtn.classList.toggle('selected', isSelected);
+                saveBtn.innerHTML = `<i class="ph-bold ${isSelected ? 'ph-check' : 'ph-plus'}"></i> <span>${isSelected ? 'Selected' : 'Select'}</span>`;
+            }
+        }
+
+        function updateSelectionBar() {
+            const count = selectedItemIds.size;
+            selectedCountEl.textContent = count.toLocaleString();
+
+            if (count > 0) {
+                selectionBar.classList.remove('hidden');
+                let totalBytes = 0;
+                selectedItemIds.forEach(id => {
+                    const item = allLoadedItems.get(id);
+                    if (item && item.size) totalBytes += item.size;
+                });
+                selectedSizeText.textContent = `pins selected (${formatBytes(totalBytes)})`;
+            } else {
+                selectionBar.classList.add('hidden');
+            }
+        }
+
+        // Select All Visible
+        document.getElementById('select-visible-btn').addEventListener('click', () => {
+            allLoadedItems.forEach((_, id) => {
+                selectedItemIds.add(id);
+                updateCardSelectionState(id);
+            });
+            updateSelectionBar();
+        });
+
+        // Deselect All
+        document.getElementById('deselect-all-btn').addEventListener('click', () => {
+            selectedItemIds.clear();
+            allLoadedItems.forEach((_, id) => updateCardSelectionState(id));
+            updateSelectionBar();
+        });
+
+        // Batch Download Selected
+        document.getElementById('download-selected-btn').addEventListener('click', async () => {
+            if (selectedItemIds.size === 0) return;
+
+            const btn = document.getElementById('download-selected-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="ph-bold ph-spinner ph-spin"></i> Starting download...`;
+
+            try {
+                const res = await fetch('/api/download_selected', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        target: currentChannel === 'all' ? 'ALL' : currentChannel,
+                        output_dir: './downloads',
+                        selected_ids: Array.from(selectedItemIds)
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`Download queued for ${selectedItemIds.size} pins!\nTrack progress in real-time on the main Dashboard.`);
+                } else {
+                    alert(`Error: ${data.detail || 'Download request failed'}`);
+                }
+            } catch (err) {
+                alert(`Network error starting download: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="ph-bold ph-download-simple"></i> <span>Download Selected</span>`;
+            }
+        });
+
+        // Delete Selected Pins from History
+        document.getElementById('delete-selected-btn').addEventListener('click', async () => {
+            if (selectedItemIds.size === 0) return;
+            const count = selectedItemIds.size;
+            if (!confirm(`Are you sure you want to delete ${count} selected pin${count > 1 ? 's' : ''} from media history?`)) {
+                return;
+            }
+
+            const btn = document.getElementById('delete-selected-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="ph-bold ph-spinner ph-spin"></i> Deleting...`;
+
+            try {
+                const res = await fetch('/api/media/clear', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids: Array.from(selectedItemIds) })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    selectedItemIds.clear();
+                    updateSelectionBar();
+                    resetAndReload();
+                    alert(data.message || `Successfully deleted ${count} pin(s).`);
+                } else {
+                    alert(`Error: ${data.detail || 'Failed to delete selected pins'}`);
+                }
+            } catch (err) {
+                alert(`Network error: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="ph-bold ph-trash"></i> <span>Delete Selected</span>`;
+            }
+        });
+
+        // Clean Junk Button Handler
+        document.getElementById('clean-junk-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('clean-junk-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="ph-bold ph-spinner ph-spin"></i> Cleaning...`;
+
+            try {
+                const res = await fetch('/api/system/clean_cache?force=true', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || 'Cache & junk cleaned successfully!');
+                    fetchSummary();
+                } else {
+                    alert(`Clean failed: ${data.detail || 'Unknown error'}`);
+                }
+            } catch (err) {
+                alert(`Network error: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="ph-bold ph-broom"></i> <span>Clean Junk</span>`;
+            }
+        });
+
+        // Clear Media History Modal Handlers
+        const clearMediaBtn = document.getElementById('clear-media-btn');
+        const clearMediaModal = document.getElementById('clear-media-modal');
+        const closeClearModalBtn = document.getElementById('close-clear-modal-btn');
+        const cancelClearBtn = document.getElementById('cancel-clear-btn');
+        const confirmClearBtn = document.getElementById('confirm-clear-btn');
+        const clearScopeLabel = document.getElementById('clear-current-scope-label');
+
+        function openClearModal() {
+            const srcName = currentSource === 'daemon' ? 'Daemon Watcher' : (currentSource === 'scraper' ? 'Scraper Archive' : 'All Media');
+            const catName = currentCategory !== 'all' ? ` • ${currentCategory.toUpperCase()}` : '';
+            clearScopeLabel.textContent = `${srcName}${catName}`;
+            clearMediaModal.classList.remove('hidden');
+        }
+
+        function closeClearModal() {
+            clearMediaModal.classList.add('hidden');
+        }
+
+        if (clearMediaBtn) clearMediaBtn.addEventListener('click', openClearModal);
+        if (closeClearModalBtn) closeClearModalBtn.addEventListener('click', closeClearModal);
+        if (cancelClearBtn) cancelClearBtn.addEventListener('click', closeClearModal);
+        if (clearMediaModal) {
+            clearMediaModal.addEventListener('click', (e) => {
+                if (e.target === clearMediaModal) closeClearModal();
+            });
+        }
+
+        if (confirmClearBtn) {
+            confirmClearBtn.addEventListener('click', async () => {
+                const scope = document.querySelector('input[name="clear-scope"]:checked')?.value || 'current';
+                confirmClearBtn.disabled = true;
+                confirmClearBtn.innerHTML = `<i class="ph-bold ph-spinner ph-spin"></i> Clearing...`;
+
+                try {
+                    const payload = scope === 'all' 
+                        ? { source: 'all', category: 'all' } 
+                        : { source: currentSource, category: currentCategory, channel: currentChannel };
+                    
+                    const res = await fetch('/api/media/clear', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        closeClearModal();
+                        selectedItemIds.clear();
+                        updateSelectionBar();
+                        resetAndReload();
+                        alert(data.message || 'Media cleared successfully!');
+                    } else {
+                        alert(`Error: ${data.detail || 'Failed to clear media'}`);
+                    }
+                } catch (err) {
+                    alert(`Network error: ${err.message}`);
+                } finally {
+                    confirmClearBtn.disabled = false;
+                    confirmClearBtn.innerHTML = `<i class="ph-bold ph-trash"></i> Clear Now`;
+                }
+            });
+        }
+
+        // Source Switcher (All Media | Daemon Watcher | Scraper Archive)
+        document.querySelectorAll('.pinterest-nav-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('.pinterest-nav-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                currentSource = pill.dataset.source;
+                resetAndReload();
+            });
+        });
+
+        // Category Tab Switchers
+        document.querySelectorAll('.pin-cat-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('.pin-cat-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                currentCategory = pill.dataset.category;
+                resetAndReload();
+            });
+        });
+
+        // Channel Filter Switcher
+        channelFilter.addEventListener('change', () => {
+            currentChannel = channelFilter.value;
+            resetAndReload();
+        });
+
+        // Sort Filter Switcher
+        sortFilter.addEventListener('change', () => {
+            currentSort = sortFilter.value;
+            resetAndReload();
+        });
+
+        // Debounced Search
+        let searchDebounceTimer = null;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchDebounceTimer);
+            const val = searchInput.value.trim();
+            clearSearchBtn.classList.toggle('hidden', !val);
+
+            searchDebounceTimer = setTimeout(() => {
+                currentSearch = val;
+                resetAndReload();
+            }, 350);
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            currentSearch = '';
+            clearSearchBtn.classList.add('hidden');
+            resetAndReload();
+        });
+
+        // Fullscreen Cinema Modal
+        const previewModal = document.getElementById('media-preview-modal');
+        const modalFileName = document.getElementById('modal-file-name');
+        const modalTypeBadge = document.getElementById('modal-type-badge');
+        const modalBody = document.getElementById('modal-preview-body');
+        const modalChannelName = document.getElementById('modal-channel-name');
+        const modalMetaInfo = document.getElementById('modal-meta-info');
+        const modalDownloadBtn = document.getElementById('modal-download-btn');
+        const modalCopyBtn = document.getElementById('modal-copy-btn');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        function openPreviewModal(item) {
+            const mType = (item.type || 'others').toLowerCase();
+            modalFileName.textContent = item.file_name || `Item ${item.id}`;
+            modalTypeBadge.textContent = mType.toUpperCase();
+            modalTypeBadge.className = `type-badge type-${mType}`;
+
+            modalChannelName.innerHTML = `<i class="ph-bold ph-broadcast"></i> ${escapeHtml(item.channel_name || 'Channel')}`;
+            modalMetaInfo.textContent = `${formatBytes(item.size)} ${item.resolution && item.resolution !== 'Unknown' ? `• ${item.resolution}` : ''} ${item.duration ? `• ${formatDuration(item.duration)}` : ''}`;
+
+            modalBody.innerHTML = '';
+            if (mType === 'video') {
+                modalBody.innerHTML = `
+                    <div class="modal-video-wrapper">
+                        <video id="cinema-video-player" src="/api/stream/${item.id}?chat_id=${item.chat_id || ''}" poster="/api/thumbnail/${item.id}?chat_id=${item.chat_id || ''}" controls autoplay playsinline preload="auto" class="modal-media-player"></video>
+                        <div class="video-loader-spinner hidden" id="video-buffering-spinner">
+                            <i class="ph-bold ph-spinner ph-spin"></i>
+                        </div>
+                    </div>
+                `;
+                const v = document.getElementById('cinema-video-player');
+                const spin = document.getElementById('video-buffering-spinner');
+                if (v && spin) {
+                    const hideSpinner = () => spin.classList.add('hidden');
+                    v.addEventListener('waiting', () => spin.classList.remove('hidden'));
+                    v.addEventListener('playing', hideSpinner);
+                    v.addEventListener('canplay', hideSpinner);
+                    v.addEventListener('loadeddata', hideSpinner);
+                    v.addEventListener('error', () => {
+                        hideSpinner();
+                        const errorNotice = document.createElement('div');
+                        errorNotice.style.cssText = 'position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); color:#f87171; padding:1.5rem; text-align:center; z-index:20;';
+                        errorNotice.innerHTML = `
+                            <i class="ph-bold ph-warning-circle" style="font-size: 2.5rem; margin-bottom: 0.75rem;"></i>
+                            <p style="margin: 0 0 0.5rem 0; font-weight: 600; font-size: 1rem; color: #fff;">In-Browser Streaming Unavailable</p>
+                            <p style="margin: 0 0 1rem 0; font-size: 0.85rem; color: #94a3b8; max-width: 420px;">Your browser cannot decode this video codec directly, or the file is downloading. Click below to download the full video file:</p>
+                            <a href="/api/stream/${item.id}?download=true&chat_id=${item.chat_id || ''}" target="_blank" class="btn primary-btn btn-sm" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; padding:10px 22px; border-radius:24px; font-weight:700;">
+                                <i class="ph-bold ph-download-simple"></i> Download Video File
+                            </a>
+                        `;
+                        v.parentElement.appendChild(errorNotice);
+                    });
+                }
+            } else if (mType === 'image') {
+                modalBody.innerHTML = `
+                    <img src="/api/stream/${item.id}?download=false&chat_id=${item.chat_id || ''}" alt="${escapeHtml(item.file_name)}" class="modal-media-image">
+                `;
+            } else if (mType === 'msg') {
+                modalBody.innerHTML = `
+                    <div class="modal-msg-box">
+                        <i class="ph-duotone ph-quotes modal-quote-icon"></i>
+                        <p class="modal-msg-text">${escapeHtml(item.text)}</p>
+                    </div>
+                `;
+            } else {
+                modalBody.innerHTML = `
+                    <div class="modal-doc-box">
+                        <i class="ph-duotone ph-file-arrow-down modal-doc-icon"></i>
+                        <p class="modal-doc-name">${escapeHtml(item.file_name)}</p>
+                        <span class="modal-doc-size">${formatBytes(item.size)}</span>
+                    </div>
+                `;
+            }
+
+            modalDownloadBtn.onclick = () => {
+                window.open(`/api/stream/${item.id}?download=true&chat_id=${item.chat_id || ''}`, '_blank');
+            };
+
+            const streamTabBtn = document.getElementById('modal-stream-tab-btn');
+            if (streamTabBtn) {
+                streamTabBtn.onclick = () => {
+                    window.open(`/api/stream/${item.id}?chat_id=${item.chat_id || ''}`, '_blank');
+                };
+            }
+
+            modalCopyBtn.onclick = () => {
+                const info = `Filename: ${item.file_name || 'Message'}\nChannel: ${item.channel_name}\nSize: ${formatBytes(item.size)}\nDate: ${item.date}`;
+                navigator.clipboard.writeText(info).then(() => {
+                    const orig = modalCopyBtn.innerHTML;
+                    modalCopyBtn.innerHTML = `<i class="ph-bold ph-check"></i> Copied!`;
+                    setTimeout(() => modalCopyBtn.innerHTML = orig, 2000);
+                });
+            };
+
+            previewModal.classList.remove('hidden');
+        }
+
+        function closePreviewModal() {
+            previewModal.classList.add('hidden');
+            const v = modalBody.querySelector('video');
+            if (v) {
+                try {
+                    v.pause();
+                    v.removeAttribute('src');
+                    v.load();
+                } catch (e) {}
+            }
+            modalBody.innerHTML = '';
+        }
+
+        modalCloseBtn.addEventListener('click', closePreviewModal);
+        previewModal.addEventListener('click', (e) => {
+            if (e.target === previewModal) closePreviewModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !previewModal.classList.contains('hidden')) {
+                closePreviewModal();
+            }
+        });
+
+        // Refresh Feed Button Handler
+        const refreshFeedBtn = document.getElementById('refresh-feed-btn');
+        if (refreshFeedBtn) {
+            refreshFeedBtn.addEventListener('click', async () => {
+                refreshFeedBtn.classList.add('refreshing');
+                const icon = document.getElementById('refresh-icon');
+                if (icon) icon.classList.add('ph-spin');
+                
+                try {
+                    await Promise.all([resetAndReload(), fetchSummary()]);
+                } finally {
+                    setTimeout(() => {
+                        refreshFeedBtn.classList.remove('refreshing');
+                        if (icon) icon.classList.remove('ph-spin');
+                    }, 600);
+                }
+            });
+        }
+
+        // Initial Boot
+        resetAndReload();
+
+        // Background Auto-Refresh Poller (Checks counts every 15 seconds)
+        let lastKnownTotal = 0;
+        async function checkAutoRefresh() {
+            try {
+                const res = await fetch(`/api/media/summary?source=${encodeURIComponent(currentSource)}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const newTotal = (data.sources && data.sources[currentSource]) || data.total || 0;
+                if (lastKnownTotal > 0 && newTotal > lastKnownTotal) {
+                    fetchSummary();
+                    if (currentPage === 1 && window.scrollY < 200 && !isLoading) {
+                        loadPage(1);
+                    }
+                }
+                lastKnownTotal = newTotal;
+            } catch (e) {}
+        }
+        setInterval(checkAutoRefresh, 15000);
+    </script>
+</body>
+</html>

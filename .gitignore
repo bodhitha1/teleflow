@@ -1,0 +1,68 @@
+# ==========================================
+# Telegrab - Security & Production .gitignore
+# ==========================================
+
+# 1. Environment & Secrets (NEVER COMMIT)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# 2. Telegram Auth Sessions & Tokens (HIGHLY SENSITIVE)
+sessions/
+*.session
+*.session.enc
+*.session-journal
+sessions.zip
+current_token.txt
+
+# 3. SQLite Databases & WAL Cache
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+*.db-journal
+payments.db
+download_history.db
+
+# 4. User Downloads & Stream Cache
+downloads/
+.thumbs/
+.stream_cache/
+
+# 5. Log Files & Diagnostic Scripts
+*.log
+*.log.*
+web_app.log
+telegrab.log
+debug_*.py
+app_monolith.py
+
+# 6. Python Bytecode, Caches & Testing
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 7. Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# 8. OS & Editor Cache
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

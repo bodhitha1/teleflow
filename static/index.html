@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="description" content="TeleFlow - Premium Telegram Media Explorer & Scraper Suite">
+    <title>TeleFlow Dashboard</title>
+    <!-- PWA Setup -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#14141c">
+    <!-- Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="style.css?v=7.1">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for (var i = 0; i < registrations.length; i++) {
+                    registrations[i].unregister();
+                }
+            });
+        }
+        if ('caches' in window) {
+            caches.keys().then(function(keys) {
+                for (var i = 0; i < keys.length; i++) {
+                    caches.delete(keys[i]);
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="background-decor">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+    </div>
+
+    <div class="app-container">
+        <header class="top-nav glass-panel">
+            <div class="logo">
+                <i class="ph-fill ph-lightning logo-icon"></i>
+                <h1>TeleFlow</h1>
+            </div>
+            <div class="nav-links" style="display: flex; gap: 0.75rem; align-items: center; margin-left: auto; margin-right: 1.5rem; flex-wrap: wrap;">
+                <a href="media.html" target="_blank" class="btn secondary-btn" style="text-decoration: none; padding: 0.5rem 0.9rem; font-size: 0.88rem;">
+                    <i class="ph-duotone ph-film-strip"></i> Media Tab
+                </a>
+                <button id="daemon-open-btn" class="btn watcher-nav-btn pulse-hover" type="button">
+                    <i class="ph-duotone ph-broadcast"></i>
+                    <span>Live Watcher</span>
+                    <span id="daemon-nav-badge" class="watcher-badge idle">Idle</span>
+                </button>
+                <button id="dashboard-clean-junk-btn" class="btn secondary-btn" type="button" title="Clean temporary cache & junk files" style="padding: 0.5rem 0.75rem;">
+                    <i class="ph-bold ph-broom"></i>
+                </button>
+                <a href="store.html" class="btn primary-btn pulse-hover" style="text-decoration: none; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    <i class="ph-fill ph-star"></i> Premium Store
+                </a>
+            </div>
+            <div class="status-indicator glass-pill">
+                <span id="global-status-dot" class="dot idle"></span>
+                <span id="global-status-text" class="status-text">Disconnected</span>
+            </div>
+        </header>
+
+        <main class="dashboard-layout">
+            <!-- Left Side: Control & Configuration Panels -->
+            <section class="control-panel">
+                <!-- Panel: Connect -->
+                <article id="panel-connect" class="glass-card active">
+                    <div class="panel-header">
+                        <div class="icon-wrap"><i class="ph-duotone ph-plugs-connected"></i></div>
+                        <div>
+                            <h2>Telegram Connection</h2>
+                            <p class="subtitle">Authenticate with MTProto API</p>
+                        </div>
+                    </div>
+                    
+                    <form id="connect-form" class="form-group">
+                        <div class="input-wrapper" style="display: none;">
+                            <label for="api-id">API ID</label>
+                            <div class="input-icon">
+                                <i class="ph ph-identification-card"></i>
+                                <input type="number" id="api-id" placeholder="e.g. 1234567" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="input-wrapper" style="display: none;">
+                            <label for="api-hash">API Hash</label>
+                            <div class="input-icon">
+                                <i class="ph ph-hash"></i>
+                                <input type="text" id="api-hash" placeholder="e.g. abcdef0123456789abcdef" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="phone-number">Phone Number</label>
+                            <div class="input-icon">
+                                <i class="ph ph-phone"></i>
+                                <input type="tel" id="phone-number" placeholder="+94 77 123 4567 or 077 123 4567" required autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="master-password">Encryption Password <span style="font-size: 0.8em; color: var(--text-muted);">(Required)</span></label>
+                            <div class="input-icon">
+                                <i class="ph ph-lock-key"></i>
+                                <input type="password" id="master-password" placeholder="Password to secure your session data" required autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="advanced-settings-toggle" style="margin-top: 0.5rem; text-align: right; font-size: 0.85rem;">
+                            <a href="#" id="toggle-proxy" style="color: var(--accent-cyan); text-decoration: none;">Advanced: Proxy Settings</a>
+                        </div>
+                        <div id="proxy-settings" style="display: none; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                            <div class="input-wrapper">
+                                <label for="proxy-type">Proxy Type</label>
+                                <select id="proxy-type" class="custom-select" style="background: rgba(255,255,255,0.05); color: #fff; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); width: 100%;">
+                                    <option value="">None</option>
+                                    <option value="SOCKS5">SOCKS5</option>
+                                    <option value="SOCKS4">SOCKS4</option>
+                                    <option value="HTTP">HTTP</option>
+                                </select>
+                            </div>
+                            <div class="input-row" style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                                <div class="input-wrapper" style="flex: 2;">
+                                    <input type="text" id="proxy-addr" placeholder="Address (e.g. 127.0.0.1)" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                                <div class="input-wrapper" style="flex: 1;">
+                                    <input type="number" id="proxy-port" placeholder="Port" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.5rem; border-radius: 4px;">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem; align-items: stretch;">
+                            <button type="submit" id="connect-btn" class="btn primary-btn pulse-hover" style="flex: 1; margin-top: 0;">
+                                <span id="connect-btn-text">Connect Client</span>
+                                <i id="connect-btn-icon" class="ph-bold ph-arrow-right"></i>
+                            </button>
+                            <button type="button" id="reset-session-btn" class="btn icon-btn" title="Reset / Clear Stored Session if password forgotten or session stuck" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.28); color: #f87171; padding: 0.75rem 1rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
+                                <i class="ph-bold ph-arrow-counter-clockwise"></i>
+                                <span>Reset Session</span>
+                            </button>
+                        </div>
+                        <div id="connect-hint" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.6rem; text-align: center;">
+                            Connecting to Telegram may take a few seconds on first request while establishing MTProto encryption.
+                        </div>
+                    </form>
+                </article>
+
+                <!-- STEP 2: Verify Code -->
+                <article id="panel-verify" class="glass-card panel" style="display: none;">
+                    <div class="panel-header">
+                        <div class="icon-wrap"><i class="ph-duotone ph-shield-check"></i></div>
+                        <div>
+                            <h2>Verification Required</h2>
+                            <p class="subtitle">Enter the login code sent to your account</p>
+                        </div>
+                    </div>
+                    
+                    <form id="verify-form" class="form-group">
+                        <div class="input-wrapper">
+                            <label for="verify-code">Verification Code</label>
+                            <div class="input-icon">
+                                <i class="ph ph-password"></i>
+                                <input type="text" id="verify-code" placeholder="e.g. 12345" required autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="input-wrapper id-password-container" style="display: none;">
+                            <label for="verify-password">2FA Password (optional)</label>
+                            <div class="input-icon">
+                                <i class="ph ph-lock-key"></i>
+                                <input type="password" id="verify-password" placeholder="Your 2FA Password" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="button-row">
+                            <button type="button" id="verify-back-btn" class="btn secondary-btn">
+                                <i class="ph-bold ph-arrow-left"></i>
+                                <span>Cancel</span>
+                            </button>
+                            <button type="submit" id="verify-btn" class="btn primary-btn pulse-hover">
+                                <span>Verify</span>
+                                <i class="ph-bold ph-check"></i>
+                            </button>
+                        </div>
+                    </form>
+                </article>
+
+                <!-- STEP 3: Scraper Targets -->
+                <article id="panel-scraper" class="glass-card panel" style="display: none;">
+                    <div class="panel-header space-between">
+                        <div class="header-left">
+                            <div class="icon-wrap" id="channel-logo-container"><i class="ph-duotone ph-target" id="channel-logo-icon"></i></div>
+                            <div>
+                                <h2>Scraper Controller</h2>
+                                <p class="subtitle">Target private/public channels or groups</p>
+                            </div>
+                        </div>
+                        <button id="disconnect-btn" class="btn icon-btn danger-outline" title="Disconnect Session">
+                            <i class="ph-bold ph-power"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="scraper-form" class="form-group">
+                        <!-- 3-Mode Target Selector -->
+                        <div class="input-wrapper">
+                            <label class="section-mode-label">Target Channels</label>
+                            <div class="channel-mode-tabs">
+                                <button type="button" class="mode-tab-btn active" id="mode-btn-single" data-mode="single">
+                                    <i class="ph-duotone ph-crosshair"></i>
+                                    <span>Single</span>
+                                </button>
+                                <button type="button" class="mode-tab-btn" id="mode-btn-multiple" data-mode="multiple">
+                                    <i class="ph-duotone ph-squares-four"></i>
+                                    <span>Multiple</span>
+                                    <span id="multi-selected-badge" class="mode-count-badge hidden">0</span>
+                                </button>
+                                <button type="button" class="mode-tab-btn" id="mode-btn-all" data-mode="all">
+                                    <i class="ph-duotone ph-globe"></i>
+                                    <span>All Channels</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Mode 1: Single Channel -->
+                        <div id="target-mode-single" class="mode-content active">
+                            <div class="input-wrapper">
+                                <label for="scraper-target-select">Select Channel or Group</label>
+                                <div class="input-icon" id="select-target-container">
+                                    <i class="ph ph-list-bullets"></i>
+                                    <select id="scraper-target-select" class="custom-select">
+                                        <option value="">Loading your channels...</option>
+                                    </select>
+                                </div>
+                                <div class="manual-input-toggle" style="margin-top: 0.25rem; font-size: 0.8rem; text-align: right;">
+                                    <a href="#" id="toggle-manual-target" style="color: var(--accent-cyan); text-decoration: none;">Or enter username/link manually</a>
+                                </div>
+                                <div class="input-icon" id="manual-target-container" style="display: none;">
+                                    <i class="ph ph-telegram-logo"></i>
+                                    <input type="text" id="scraper-target" placeholder="e.g. @my_channel or -100123456" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mode 2: Multiple Channels Checklist -->
+                        <div id="target-mode-multiple" class="mode-content hidden">
+                            <div class="input-wrapper">
+                                <div class="multi-header-row">
+                                    <label>Select Specific Channels</label>
+                                    <div class="multi-actions">
+                                        <button type="button" id="multi-select-all-btn" class="text-btn">Select All</button>
+                                        <span class="divider">•</span>
+                                        <button type="button" id="multi-clear-btn" class="text-btn">Clear</button>
+                                    </div>
+                                </div>
+                                <div class="input-icon search-channels-input" style="margin-bottom: 0.5rem;">
+                                    <i class="ph ph-magnifying-glass"></i>
+                                    <input type="text" id="multi-search-input" placeholder="Filter channels by name..." autocomplete="off">
+                                </div>
+                                <div id="multi-channels-list" class="multi-channels-list glass-inset">
+                                    <div class="multi-loading-state">
+                                        <i class="ph-bold ph-spinner" style="animation: spin 1s linear infinite;"></i>
+                                        <span>Loading channels...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mode 3: All Channels Preset -->
+                        <div id="target-mode-all" class="mode-content hidden">
+                            <div class="all-channels-info-card glass-inset">
+                                <div class="info-card-icon">
+                                    <i class="ph-duotone ph-sparkle"></i>
+                                </div>
+                                <div class="info-card-text">
+                                    <strong>All Joined Channels & Groups</strong>
+                                    <p>The scraper will sequentially scan and download media from all channels and groups in your account.</p>
+                                    <span class="info-recommendation"><i class="ph-fill ph-info"></i> Tip: Use Start/End dates below to bound the download scope.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-row" style="display: flex; gap: 1rem;">
+                            <div class="input-wrapper" style="flex: 1;">
+                                <label for="scraper-start-date">Start Date (Optional)</label>
+                                <div class="input-icon">
+                                    <i class="ph ph-calendar-plus"></i>
+                                    <input type="date" id="scraper-start-date">
+                                </div>
+                            </div>
+                            <div class="input-wrapper" style="flex: 1;">
+                                <label for="scraper-end-date">End Date (Optional)</label>
+                                <div class="input-icon">
+                                    <i class="ph ph-calendar-check"></i>
+                                    <input type="date" id="scraper-end-date">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-wrapper">
+                            <label for="forward-target">Forward Valid Links To (Optional)</label>
+                            <div class="input-icon">
+                                <i class="ph ph-paper-plane-right"></i>
+                                <input type="text" id="forward-target" placeholder="e.g. https://t.me/+xyz or @channel (Defaults to Saved Messages)" autocomplete="off">
+                            </div>
+                        </div>
+
+                        <div class="input-wrapper">
+                            <label for="mirror-target">Mirror Media To (Optional)</label>
+                            <div class="input-icon">
+                                <i class="ph ph-copy"></i>
+                                <input type="text" id="mirror-target" placeholder="e.g. @backup_channel" autocomplete="off">
+                            </div>
+                        </div>
+                        
+                        <div class="input-wrapper">
+                            <label for="webhook-url">Webhook URL (Optional)</label>
+                            <div class="input-icon">
+                                <i class="ph ph-bell-ringing"></i>
+                                <input type="url" id="webhook-url" placeholder="e.g. https://hook.example.com/" autocomplete="off">
+                            </div>
+                        </div>
+
+                        <div class="input-wrapper">
+                            <label>Media Types to Extract</label>
+                            <div class="checkbox-group" style="display: flex; gap: 1.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                                <label class="custom-toggle">
+                                    <input type="checkbox" id="scrape-videos" checked>
+                                    <span class="slider"></span>
+                                    <span class="toggle-label">Videos</span>
+                                </label>
+                                <label class="custom-toggle">
+                                    <input type="checkbox" id="scrape-images" checked>
+                                    <span class="slider"></span>
+                                    <span class="toggle-label">Images</span>
+                                </label>
+                                <label class="custom-toggle">
+                                    <input type="checkbox" id="scrape-messages" checked>
+                                    <span class="slider"></span>
+                                    <span class="toggle-label">Messages (MSG)</span>
+                                </label>
+                                <label class="custom-toggle">
+                                    <input type="checkbox" id="scrape-others" checked>
+                                    <span class="slider"></span>
+                                    <span class="toggle-label">Others</span>
+                                </label>
+                                <label class="custom-toggle">
+                                    <input type="checkbox" id="scrape-urls" checked>
+                                    <span class="slider"></span>
+                                    <span class="toggle-label">URLs</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="input-wrapper">
+                            <label for="scraper-output">Output Directory</label>
+                            <div class="input-icon">
+                                <i class="ph ph-folder-open"></i>
+                                <input type="text" id="scraper-output" value="./downloads" required autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="button-row action-row">
+                            <button type="submit" id="scraper-start-btn" class="btn primary-btn pulse-hover w-full">
+                                <i class="ph-bold ph-play"></i>
+                                <span>Start Scraping</span>
+                            </button>
+                            <button type="button" id="scraper-stop-btn" class="btn danger-btn pulse-hover w-full" style="display: none;">
+                                <i class="ph-bold ph-stop"></i>
+                                <span>Stop Scraping</span>
+                            </button>
+                        </div>
+                    </form>
+                </article>
+            </section>
+
+            <!-- Right Side: Status Telemetry & Live Log Metrics -->
+            <section class="telemetry-panel">
+                <article class="glass-card status-card">
+                    <div class="panel-header">
+                        <div class="icon-wrap"><i class="ph-duotone ph-chart-line-up"></i></div>
+                        <div>
+                            <h2>Live Telemetry</h2>
+                            <p class="subtitle">Real-time downloader engine metrics</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Card -->
+                    <div id="progress-container" class="progress-container glass-inset" style="display: none;">
+                        <div class="progress-details">
+                            <div class="file-info">
+                                <i class="ph-fill ph-video-camera"></i>
+                                <span id="progress-file" class="file-name">filename.mp4</span>
+                            </div>
+                            <span id="progress-percent" class="percent">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Validation Progress Card -->
+                    <div id="validation-progress-container" class="progress-container glass-inset" style="display: none;">
+                        <div class="progress-details">
+                            <div class="file-info">
+                                <i class="ph-fill ph-shield-check" style="color: var(--accent-cyan);"></i>
+                                <span id="validation-progress-text" class="file-name">Validating Links...</span>
+                            </div>
+                            <span id="validation-time-est" class="percent" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="validation-bar-fill" class="progress-bar-fill" style="width: 0%; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));"></div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics grid -->
+                    <div class="stats-grid">
+                        <div class="stat-box glass-inset hover-lift">
+                            <i class="ph-duotone ph-magnifying-glass stat-icon"></i>
+                            <span class="stat-val" id="stat-scanned">0</span>
+                            <span class="stat-lbl">Scanned</span>
+                        </div>
+                        <div class="stat-box glass-inset hover-lift clickable-stat" id="video-stat-box" style="cursor: pointer;" title="Click to view pending media">
+                            <i class="ph-duotone ph-film-strip stat-icon" style="color: #a855f7;"></i>
+                            <span class="stat-val" id="stat-found" style="color: #a855f7;">0</span>
+                            <span class="stat-lbl">Videos Found</span>
+                        </div>
+                        <div class="stat-box glass-inset hover-lift success-box">
+                            <i class="ph-duotone ph-download-simple stat-icon success"></i>
+                            <span class="stat-val success" id="stat-downloaded">0</span>
+                            <span class="stat-lbl">Videos DL</span>
+                        </div>
+                        <div class="stat-box glass-inset hover-lift danger-box">
+                            <i class="ph-duotone ph-warning stat-icon danger"></i>
+                            <span class="stat-val danger" id="stat-failed">0</span>
+                            <span class="stat-lbl">Failed</span>
+                        </div>
+                        <div class="stat-box glass-inset hover-lift clickable-stat" id="image-stat-box" style="cursor: pointer;" title="Click to view scraped images">
+                            <i class="ph-duotone ph-image stat-icon" style="color: var(--accent-blue);"></i>
+                            <span class="stat-val" id="stat-images" style="color: var(--accent-blue);">0</span>
+                            <span class="stat-lbl">Images DL</span>
+                        </div>
+                        <div class="stat-box glass-inset hover-lift clickable-stat" id="url-stat-box" style="cursor: pointer;" title="Click to view scraped links">
+                            <i class="ph-duotone ph-link stat-icon" style="color: var(--accent-cyan);"></i>
+                            <span class="stat-val" id="stat-urls" style="color: var(--accent-cyan);">0</span>
+                            <span class="stat-lbl">URLs Found</span>
+                        </div>
+                    </div>
+
+                    <!-- Db History info -->
+                    <div class="db-info">
+                        <div class="db-title-row">
+                            <i class="ph-duotone ph-database"></i>
+                            <span class="db-title">Database Records</span>
+                        </div>
+                        <div class="db-stats-row glass-inset">
+                            <div class="db-stat-item">
+                                <i class="ph-fill ph-check-circle success"></i>
+                                <span>Completed: <strong id="db-stat-dl">0</strong></span>
+                            </div>
+                            <div class="db-stat-item">
+                                <i class="ph-fill ph-x-circle danger"></i>
+                                <span>Errors: <strong id="db-stat-fail">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Terminal -->
+                    <div class="terminal-container" style="margin-top: 1.5rem;">
+                        <div class="panel-header" style="margin-bottom: 0.5rem; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div class="icon-wrap"><i class="ph-duotone ph-terminal"></i></div>
+                                <div>
+                                    <h2 style="font-size: 1rem; margin: 0;">Live Terminal Log</h2>
+                                </div>
+                            </div>
+                            <div id="terminal-status" style="width: 10px; height: 10px; border-radius: 50%; background: var(--status-idle);"></div>
+                        </div>
+                        <div id="terminal-view" style="width: 100%; height: 150px; background: rgba(0,0,0,0.5); padding: 0.5rem; border-radius: 8px; font-family: monospace; font-size: 11px; color: #34d399; white-space: pre-wrap; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05);"></div>
+                    </div>
+                </article>
+
+                <!-- Status Feedback Alerts -->
+                <div id="status-alert" class="alert-box" style="display: none;">
+                    <div class="alert-content">
+                        <i id="alert-icon" class="ph-fill ph-info"></i>
+                        <span id="alert-message"></span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Daemon / Live Watcher Modal -->
+    <div id="daemon-modal" class="modal-backdrop hidden">
+        <div class="modal-card glass-panel">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <div class="modal-icon-wrap"><i class="ph-duotone ph-broadcast"></i></div>
+                    <div>
+                        <h3 class="modal-title">Live Channel Watcher</h3>
+                        <p class="modal-subtitle">Stream and download channel media as it arrives</p>
+                    </div>
+                </div>
+                <button type="button" id="daemon-close-btn" class="modal-close-btn" aria-label="Close modal">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <form id="daemon-form" class="modal-form">
+                <!-- 3-Mode Target Selector for Daemon -->
+                <div class="input-wrapper">
+                    <label class="section-mode-label">Target Channels</label>
+                    <div class="channel-mode-tabs">
+                        <button type="button" class="mode-tab-btn active" id="daemon-mode-btn-single" data-mode="single">
+                            <i class="ph-duotone ph-crosshair"></i>
+                            <span>Single</span>
+                        </button>
+                        <button type="button" class="mode-tab-btn" id="daemon-mode-btn-multiple" data-mode="multiple">
+                            <i class="ph-duotone ph-squares-four"></i>
+                            <span>Multiple</span>
+                            <span id="daemon-multi-selected-badge" class="mode-count-badge hidden">0</span>
+                        </button>
+                        <button type="button" class="mode-tab-btn" id="daemon-mode-btn-all" data-mode="all">
+                            <i class="ph-duotone ph-globe"></i>
+                            <span>All Channels</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Daemon Mode 1: Single Channel -->
+                <div id="daemon-target-mode-single" class="mode-content active">
+                    <div class="input-wrapper">
+                        <label for="daemon-target-select">Select Channel or Group</label>
+                        <div class="input-icon" id="daemon-select-target-container">
+                            <i class="ph ph-list-bullets"></i>
+                            <select id="daemon-target-select" class="custom-select">
+                                <option value="">Loading your channels...</option>
+                            </select>
+                        </div>
+                        <div class="manual-input-toggle" style="margin-top: 0.25rem; font-size: 0.8rem; text-align: right;">
+                            <a href="#" id="daemon-toggle-manual-target" style="color: var(--accent-cyan); text-decoration: none;">Or enter username/link manually</a>
+                        </div>
+                        <div class="input-icon" id="daemon-manual-target-container" style="display: none;">
+                            <i class="ph ph-telegram-logo"></i>
+                            <input type="text" id="daemon-target-manual" placeholder="e.g. @my_channel or -100123456" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daemon Mode 2: Multiple Channels Checklist -->
+                <div id="daemon-target-mode-multiple" class="mode-content hidden">
+                    <div class="input-wrapper">
+                        <div class="multi-header-row">
+                            <label>Select Channels to Watch</label>
+                            <div class="multi-actions">
+                                <button type="button" id="daemon-multi-select-all-btn" class="text-btn">Select All</button>
+                                <span class="divider">•</span>
+                                <button type="button" id="daemon-multi-clear-btn" class="text-btn">Clear</button>
+                            </div>
+                        </div>
+                        <div class="input-icon search-channels-input" style="margin-bottom: 0.5rem;">
+                            <i class="ph ph-magnifying-glass"></i>
+                            <input type="text" id="daemon-multi-search-input" placeholder="Filter channels by name..." autocomplete="off">
+                        </div>
+                        <div id="daemon-multi-channels-list" class="multi-channels-list glass-inset">
+                            <div class="multi-loading-state">
+                                <i class="ph-bold ph-spinner" style="animation: spin 1s linear infinite;"></i>
+                                <span>Loading channels...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daemon Mode 3: All Channels Preset -->
+                <div id="daemon-target-mode-all" class="mode-content hidden">
+                    <div class="all-channels-info-card glass-inset">
+                        <div class="info-card-icon">
+                            <i class="ph-duotone ph-broadcast"></i>
+                        </div>
+                        <div class="info-card-text">
+                            <strong>All Joined Channels & Groups</strong>
+                            <p>Live Watcher will stream incoming media in real-time from every channel and group in your account.</p>
+                        </div>
+                    </div>
+                <div class="input-wrapper">
+                    <label>Media Types to Watch & Detect</label>
+                    <div class="checkbox-group" style="display: flex; gap: 1.25rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                        <label class="custom-toggle">
+                            <input type="checkbox" id="daemon-watch-videos" checked>
+                            <span class="slider"></span>
+                            <span class="toggle-label">Videos</span>
+                        </label>
+                        <label class="custom-toggle">
+                            <input type="checkbox" id="daemon-watch-images" checked>
+                            <span class="slider"></span>
+                            <span class="toggle-label">Images</span>
+                        </label>
+                        <label class="custom-toggle">
+                            <input type="checkbox" id="daemon-watch-messages" checked>
+                            <span class="slider"></span>
+                            <span class="toggle-label">Messages (MSG)</span>
+                        </label>
+                        <label class="custom-toggle">
+                            <input type="checkbox" id="daemon-watch-others" checked>
+                            <span class="slider"></span>
+                            <span class="toggle-label">Others</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="input-wrapper">
+                    <label for="daemon-output">Download Directory</label>
+                    <div class="input-icon">
+                        <i class="ph ph-folder"></i>
+                        <input type="text" id="daemon-output" value="./downloads" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" id="daemon-start-btn" class="btn primary-btn pulse-hover">
+                        <i class="ph-bold ph-play"></i>
+                        <span>Start Daemon</span>
+                    </button>
+                    <button type="button" id="daemon-stop-btn" class="btn danger-btn hidden">
+                        <i class="ph-bold ph-stop"></i>
+                        <span>Stop Daemon</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Live Toast Notifications Container -->
+    <div id="flash-card-container" class="flash-card-container"></div>
+
+    <script src="app.js?v=5.2"></script>
+</body>
+</html>

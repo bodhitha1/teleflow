@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeleFlow Premium Store</title>
+    <link rel="stylesheet" href="style.css?v=7.1">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .store-layout {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+            z-index: 10;
+        }
+        
+        .store-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease forwards;
+        }
+
+        .store-header h1 {
+            font-size: 3rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .store-header p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .product-card:nth-child(1) { animation-delay: 0.1s; }
+        .product-card:nth-child(2) { animation-delay: 0.2s; }
+        .product-card:nth-child(3) { animation-delay: 0.3s; }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: var(--accent-gradient);
+            opacity: 0;
+            transition: var(--transition-normal);
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--card-border-hover);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .product-card:hover::before {
+            opacity: 1;
+        }
+
+        .product-icon {
+            font-size: 3rem;
+            color: var(--accent-cyan);
+            margin-bottom: 1.5rem;
+            background: rgba(6, 182, 212, 0.1);
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .product-card:nth-child(2) .product-icon {
+            color: var(--accent-purple);
+            background: rgba(168, 85, 247, 0.1);
+        }
+        
+        .product-card:nth-child(3) .product-icon {
+            color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .product-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-desc {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+            line-height: 1.6;
+        }
+
+        .product-price {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .product-price .ph-star {
+            color: #f59e0b;
+        }
+
+        .buy-btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .buy-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .refund-section {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px dashed rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .refund-input-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+        
+        .refund-input-group input {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            width: 300px;
+        }
+        
+        .refund-btn {
+            background: transparent;
+            border: 1px solid var(--status-error);
+            color: var(--status-error);
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .refund-btn:hover {
+            background: var(--status-error);
+            color: white;
+        }
+        
+        .back-nav {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            z-index: 20;
+        }
+        
+        .back-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition-fast);
+        }
+        
+        .back-nav a:hover {
+            color: white;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-decor">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+    </div>
+
+    <div class="back-nav">
+        <a href="index.html">
+            <i class="ph-bold ph-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <main class="store-layout">
+        <div class="store-header">
+            <h1>Premium Features</h1>
+            <p>Unlock the full power of TeleFlow. Purchase using Telegram Stars (⭐️).</p>
+        </div>
+
+        <div class="products-grid">
+            <!-- Product 1 -->
+            <div class="product-card">
+                <div class="product-icon"><i class="ph-duotone ph-crown"></i></div>
+                <h2 class="product-title">Premium Subscription</h2>
+                <p class="product-desc">Get unlimited scraping speed, proxy support, and access to all future premium features.</p>
+                <div class="product-price">
+                    <i class="ph-fill ph-star"></i> 50
+                </div>
+                <button class="buy-btn" onclick="purchaseProduct('premium_subscription', 50)">
+                    Buy Now
+                </button>
+            </div>
+
+            <!-- Product 2 -->
+            <div class="product-card">
+                <div class="product-icon"><i class="ph-duotone ph-database"></i></div>
+                <h2 class="product-title">Extra Storage</h2>
+                <p class="product-desc">Unlock an additional 50GB of cloud-synced storage for your scraped media files.</p>
+                <div class="product-price">
+                    <i class="ph-fill ph-star"></i> 20
+                </div>
+                <button class="buy-btn" onclick="purchaseProduct('extra_storage', 20)">
+                    Buy Now
+                </button>
+            </div>
+
+            <!-- Product 3 -->
+            <div class="product-card">
+                <div class="product-icon"><i class="ph-duotone ph-sparkle"></i></div>
+                <h2 class="product-title">Exclusive Content Pack</h2>
+                <p class="product-desc">Gain access to the exclusive VIP channels database with pre-indexed content.</p>
+                <div class="product-price">
+                    <i class="ph-fill ph-star"></i> 100
+                </div>
+                <button class="buy-btn" onclick="purchaseProduct('exclusive_content_1', 100)">
+                    Buy Now
+                </button>
+            </div>
+        </div>
+        
+        <!-- Refund Testing Section -->
+        <div class="refund-section">
+            <h3 style="margin-bottom: 0.5rem; color: var(--text-primary);">Test Refund Feature</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Enter a valid Charge ID to issue a refund.</p>
+            <div class="refund-input-group">
+                <input type="text" id="refund-charge-id" placeholder="Charge ID (e.g., ch_123456789)">
+                <button class="refund-btn" onclick="refundProduct()">Issue Refund</button>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="store.js"></script>
+</body>
+</html>
